@@ -20,6 +20,10 @@
 		EC43B70122F28BD300D36ABC /* IdcardQuality.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = EC43B6F822F28B1900D36ABC /* IdcardQuality.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		EC43B70322F292E800D36ABC /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC43B70222F292E800D36ABC /* SearchViewController.swift */; };
 		EC7814E922F2DD8000D2CC62 /* Words.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC7814E822F2DD8000D2CC62 /* Words.swift */; };
+		EC98509C22F3DEFF002736A5 /* words2.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = EC98509A22F3DEFF002736A5 /* words2.xcdatamodeld */; };
+		EC98509F22F3EB04002736A5 /* CD.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC98509E22F3EB04002736A5 /* CD.swift */; };
+		EC9850A122F41DB9002736A5 /* WordsCD.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC9850A022F41DB9002736A5 /* WordsCD.swift */; };
+		EC9850A322F41F50002736A5 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC9850A222F41F50002736A5 /* Config.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -50,6 +54,10 @@
 		EC43B6F822F28B1900D36ABC /* IdcardQuality.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = IdcardQuality.framework; sourceTree = "<group>"; };
 		EC43B70222F292E800D36ABC /* SearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewController.swift; sourceTree = "<group>"; };
 		EC7814E822F2DD8000D2CC62 /* Words.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Words.swift; sourceTree = "<group>"; };
+		EC98509B22F3DEFF002736A5 /* words.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = words.xcdatamodel; sourceTree = "<group>"; };
+		EC98509E22F3EB04002736A5 /* CD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CD.swift; sourceTree = "<group>"; };
+		EC9850A022F41DB9002736A5 /* WordsCD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordsCD.swift; sourceTree = "<group>"; };
+		EC9850A222F41F50002736A5 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +93,7 @@
 		EC43B6E222F28A7900D36ABC /* WritingScan */ = {
 			isa = PBXGroup;
 			children = (
+				EC98509D22F3EA58002736A5 /* CoreData */,
 				EC43B6F522F28B1900D36ABC /* lib */,
 				EC43B6E322F28A7900D36ABC /* AppDelegate.swift */,
 				EC43B6E522F28A7900D36ABC /* ViewController.swift */,
@@ -94,6 +103,7 @@
 				EC43B6EA22F28A7B00D36ABC /* Assets.xcassets */,
 				EC43B6EC22F28A7B00D36ABC /* LaunchScreen.storyboard */,
 				EC43B6EF22F28A7B00D36ABC /* Info.plist */,
+				EC98509A22F3DEFF002736A5 /* words2.xcdatamodeld */,
 			);
 			path = WritingScan;
 			sourceTree = "<group>";
@@ -106,6 +116,16 @@
 				EC43B6F822F28B1900D36ABC /* IdcardQuality.framework */,
 			);
 			path = lib;
+			sourceTree = "<group>";
+		};
+		EC98509D22F3EA58002736A5 /* CoreData */ = {
+			isa = PBXGroup;
+			children = (
+				EC98509E22F3EB04002736A5 /* CD.swift */,
+				EC9850A022F41DB9002736A5 /* WordsCD.swift */,
+				EC9850A222F41F50002736A5 /* Config.swift */,
+			);
+			path = CoreData;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -181,7 +201,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				EC43B70322F292E800D36ABC /* SearchViewController.swift in Sources */,
+				EC9850A122F41DB9002736A5 /* WordsCD.swift in Sources */,
+				EC98509C22F3DEFF002736A5 /* words2.xcdatamodeld in Sources */,
+				EC98509F22F3EB04002736A5 /* CD.swift in Sources */,
 				EC7814E922F2DD8000D2CC62 /* Words.swift in Sources */,
+				EC9850A322F41F50002736A5 /* Config.swift in Sources */,
 				EC43B6E622F28A7900D36ABC /* ViewController.swift in Sources */,
 				EC43B6E422F28A7900D36ABC /* AppDelegate.swift in Sources */,
 			);
@@ -391,6 +415,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		EC98509A22F3DEFF002736A5 /* words2.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				EC98509B22F3DEFF002736A5 /* words.xcdatamodel */,
+			);
+			currentVersion = EC98509B22F3DEFF002736A5 /* words.xcdatamodel */;
+			path = words2.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = EC43B6D822F28A7900D36ABC /* Project object */;
 }

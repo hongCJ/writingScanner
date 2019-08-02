@@ -12,6 +12,25 @@ extension UInt32 {
     var int: Int {
         return Int(self)
     }
+    var int32: Int32 {
+        return Int32(self)
+    }
+}
+
+extension Int32 {
+    var u: UInt32 {
+        return UInt32(self)
+    }
+}
+
+private extension String {
+    func split() -> [String] {
+        var set = Set<String>()
+        for v in self {
+            set.insert(String(v))
+        }
+        return Array(set).filter({ !$0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty})
+    }
 }
 
 struct Location {
@@ -19,6 +38,13 @@ struct Location {
     var top: UInt32
     var width: UInt32
     var height: UInt32
+    
+    init(left: UInt32, top: UInt32, width: UInt32, height: UInt32) {
+        self.left = left
+        self.top = top
+        self.width = width
+        self.height = height
+    }
     
     init(data: [String : UInt32]) {
         self.left = data["left"] ?? 0
@@ -43,13 +69,47 @@ class Words {
         self.location = location
     }
     
-    func split() -> [Words] {
-        guard words.isEmpty else {
-            return []
-        }
-        return words.components(separatedBy: "").map({
-            Words(id: log_id, words: $0, location: location)
-        })
+    init(cd: WordsCD) {
+        self.log_id = cd.logId
+        self.location = Location(left: cd.left.u, top: cd.top.u, width: cd.width.u, height: cd.height.u)
+        self.words = cd.word
     }
     
+    func split() -> [Words] {
+        var result = [Words]()
+        for v in words.split() {
+            let w = Words(id: log_id, words: v, location: location)
+            result.append(w)
+        }
+        return result
+    }
+    
+}
+
+class WordsContext {
+    var cd: CD
+    init(cd: CD) {
+        self.cd = cd
+    }
+    
+    func insert(words: [Words]) {
+        words.forEach { w in
+            let r: WordsCD = cd.create(entity: EntityName.words) as! WordsCD
+            r.logId = w.log_id
+            r.word = w.words
+            r.id = "\(w.log_id)\(w.words.hashValue)"
+            r.left = w.location.left.int32
+            r.top = w.location.top.int32
+            r.width = w.location.width.int32
+            r.height = w.location.height.int32
+        }
+    }
+    
+    func fetch(word: String) -> [Words]{
+        let predicate = word.isEmpty ? nil : NSPredicate(format: "word==%@", word)
+        let r: [WordsCD] = cd.fetch(entity: EntityName.words, predicate: predicate) as! [WordsCD]
+        return r.map({
+            Words(cd: $0)
+        })
+    }
 }

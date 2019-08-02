@@ -17,9 +17,13 @@ class ViewController: UIViewController {
     @IBOutlet var workTable: UITableView!
     fileprivate var searchController: UISearchController!
     fileprivate var searchResult: SearchViewController!
-    fileprivate var wordArray: [String] = ["123"]
+    fileprivate var wordArray: [Words] = []
     
     fileprivate var scanImage: UIImage?
+    
+    var cd: CD!
+    var wordConetxt: WordsContext!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         workTable.register(UITableViewCell.self, forCellReuseIdentifier: "work-cell")
@@ -28,12 +32,23 @@ class ViewController: UIViewController {
         searchController.searchResultsUpdater = self
         workTable.tableHeaderView = searchController.searchBar
         imageContainer.isHidden = true
+        
+        cd = CD(completionClosure: {
+           
+        })
+        wordConetxt = WordsContext(cd: cd)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
     }
     
     @IBAction func tapGesture(_ sender: Any) {
         imageContainer.isHidden = true
     }
     @IBAction func scan(_ sender: Any) {
+        searchController.searchBar.resignFirstResponder()
         let alert = UIAlertController(title: nil, message: "选择", preferredStyle: .actionSheet)
         let photo = UIAlertAction(title: "相册", style: .default) { _ in
             self.showPicker(type: .photoLibrary)
@@ -63,27 +78,42 @@ class ViewController: UIViewController {
                 self.showError(msg: "error")
                 return
             }
-//            guard let nums = r["words_result_num"] as? Int, nums > 0 else {
-//                self.showError(msg: "no word")
-//                return
-//            }
+            guard let logId = r["log_id"] as? UInt64 else {
+                self.showError(msg: "no log id")
+                return
+            }
+            
             guard let result = r["words_result"] as? [[String:Any]] else {
                 self.showError(msg: "no word")
                 return
             }
-            
-            
-            self.handleResult(result: result)
-            
+            self.handleResult(result: result, logId: "\(logId)")
         }, failHandler: { (error) in
             self.showError(msg: error?.localizedDescription ?? "")
         })
     }
     
-    private func handleResult(result: [[String: Any]]) {
+    private func handleResult(result: [[String: Any]], logId: String) {
         guard !result.isEmpty else {
+            self.showError(msg: "no value")
             return
         }
+        let words: [Words] = result.map { (value) -> Words in
+            let word = value["words"] as? String
+            let location = value["location"] as? [String : UInt32]
+            let l = Location(data: location ?? [:])
+            return Words(id: logId, words: word ?? "", location: l)
+            }.filter { !$0.words.isEmpty}
+        drawLines(words: words)
+        wordConetxt.insert(words: words.flatMap({
+            $0.split()
+        }))
+        DispatchQueue.main.async {
+            self.cd.save()
+        }
+    }
+    
+    private func drawLines(words: [Words]) {
         guard let img = scanImage else {
             return
         }
@@ -97,25 +127,9 @@ class ViewController: UIViewController {
         ctx.setLineWidth(1.0)
         ctx.setStrokeColor(UIColor.red.cgColor)
         img.draw(in: CGRect(origin: .zero, size: img.size))
-        result.forEach { words in
-            guard let chars = words["chars"] as? [[String: Any]] else {
-                return
-            }
-            chars.forEach({ char in
-                guard let location = char["location"] as? [String : Int] else {
-                    return
-                }
-                let left = location["left"] ?? 0
-                let top = location["top"] ?? 0
-                let width = location["width"] ?? 0
-                let height = location["height"] ?? 0
-                if width != 0 && height != 0 {
-                    ctx.addRect(CGRect(x: left, y: top, width: width, height: height))
-                }
-            })
-            
+        words.forEach { word in
+            ctx.addRect(word.location.rect())
         }
-        
         ctx.strokePath()
         
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
@@ -123,8 +137,6 @@ class ViewController: UIViewController {
             self.imageView.image = newImage
             self.imageContainer.isHidden = false
         }
-        
-        
     }
     
     fileprivate func showError(msg: String) {
@@ -149,14 +161,15 @@ extension ViewController: UITableViewDataSource {
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "work-cell", for: indexPath)
-        cell.textLabel?.text = wordArray[indexPath.row];
+        cell.textLabel?.text = wordArray[indexPath.row].words;
         return cell
     }
 }
 
 extension ViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
-    
+        wordArray = wordConetxt.fetch(word: searchController.searchBar.text ?? "")
+        searchResult.reloadData(data: wordArray)
     }
 }
 
