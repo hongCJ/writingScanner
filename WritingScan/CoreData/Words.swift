@@ -10,7 +10,7 @@ import UIKit
 import CoreData
 
 @objc(WordsCD)
-class WordsCD: NSManagedObject {
+class Words: NSManagedObject {
     @NSManaged var logId: String
     @NSManaged var id: String
     @NSManaged var height: Int32

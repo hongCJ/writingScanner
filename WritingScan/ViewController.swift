@@ -20,7 +20,7 @@ class ViewController: UIViewController {
     fileprivate var historyArray: [Words] = []
     fileprivate var scanImage: UIImage?
     
-    var cd: CD!
+    var cd: db!
     var wordConetxt: WordsContext!
     
     override func viewDidLoad() {
@@ -32,8 +32,8 @@ class ViewController: UIViewController {
         workTable.tableHeaderView = searchController.searchBar
         imageContainer.isHidden = true
         
-        cd = CD(completionClosure: {
-           
+        cd = db(db: "words", completionClosure: {
+            
         })
         wordConetxt = WordsContext(cd: cd)
     }
@@ -97,18 +97,22 @@ class ViewController: UIViewController {
             self.showError(msg: "no value")
             return
         }
-        let words: [Words] = result.map { (value) -> Words in
+        let words: [(String?, Location)] = result.map { (value) -> (String?, Location) in
             let word = value["words"] as? String
             let location = value["location"] as? [String : UInt32]
             let l = Location(data: location ?? [:])
-            return Words(id: logId, words: word ?? "", location: l)
-            }.filter { !$0.words.isEmpty}
-//        drawLines(words: words)
-        wordConetxt.insert(words: words.flatMap({
-            $0.split()
-        }))
+            return (word, l)
+            }
+        words.forEach { (word) in
+            guard let arr = word.0?.split() else {
+                return
+            }
+            for v in arr {
+                wordConetxt.insert(word: v, logId: logId, location: word.1)
+            }
+        }
+        self.cd.save()
         DispatchQueue.main.async {
-            self.cd.save()
             self.saveImage(image: self.scanImage, logId: logId)
         }
     }
@@ -177,7 +181,7 @@ extension ViewController: UITableViewDelegate {
         
         let arr = searchArray.isEmpty ? historyArray : searchArray
         let item = arr[indexPath.row]
-        guard let image = getImage(logId: item.log_id) else {
+        guard let image = getImage(logId: item.logId) else {
             return
         }
         let newImage = drawLines(image: image, words: [item])
@@ -191,7 +195,7 @@ extension ViewController: UITableViewDataSource {
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "work-cell", for: indexPath)
-        cell.textLabel?.text = searchArray.isEmpty ? historyArray[indexPath.row].words : searchArray[indexPath.row].words;
+        cell.textLabel?.text = searchArray.isEmpty ? historyArray[indexPath.row].word : searchArray[indexPath.row].word;
         return cell
     }
 }

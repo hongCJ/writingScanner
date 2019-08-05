@@ -33,7 +33,7 @@ extension SearchViewController: UITableViewDataSource {
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "word-cell", for: indexPath)
-        cell.textLabel?.text = data[indexPath.row].words
+        cell.textLabel?.text = data[indexPath.row].word
         return cell
     }
 }

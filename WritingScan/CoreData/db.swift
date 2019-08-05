@@ -9,14 +9,14 @@
 import UIKit
 import CoreData
 
-class CD: NSObject {
+class db: NSObject {
     var context: NSManagedObjectContext {
         return persistentContainer.viewContext
     }
     
     var persistentContainer: NSPersistentContainer
-    init(completionClosure: @escaping () -> ()) {
-        persistentContainer = NSPersistentContainer(name: "words2")
+    init(db: String, completionClosure: @escaping () -> ()) {
+        persistentContainer = NSPersistentContainer(name: db)
         persistentContainer.loadPersistentStores() { (description, error) in
             if let error = error {
                 fatalError("Failed to load Core Data stack: \(error)")
@@ -26,6 +26,7 @@ class CD: NSObject {
     }
     
     func save() {
+        
         do {
           try context.save()
         } catch {
@@ -46,6 +47,18 @@ class CD: NSObject {
             result =  try context.fetch(fetchRequest) as! [NSManagedObject]
         } catch {
 //            fatalError("not data")
+        }
+        return result
+    }
+    
+    func count(entity: String, predicate: NSPredicate) -> Int {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entity)
+        fetchRequest.predicate = predicate
+        var result = 0
+        do {
+            result = try context.count(for: fetchRequest)
+        } catch {
+            
         }
         return result
     }

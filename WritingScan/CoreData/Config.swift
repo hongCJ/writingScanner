@@ -11,3 +11,5 @@ import Foundation
 struct EntityName {
     static let words = "Words"
 }
+
+

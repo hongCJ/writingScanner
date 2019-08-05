@@ -23,7 +23,7 @@ extension Int32 {
     }
 }
 
-private extension String {
+extension String {
     func split() -> [String] {
         var set = Set<String>()
         for v in self {
@@ -57,67 +57,44 @@ struct Location {
         return CGRect(x: left.int, y: top.int, width: width.int, height: height.int)
     }
 }
-
-class Words {
-    var log_id: String
-    var location: Location
-    var words: String
-    
-    init(id: String, words: String, location: Location) {
-        self.log_id = id
-        self.words = words
-        self.location = location
+extension Words {
+    var location: Location {
+        return Location(left: left.u, top: top.u, width: width.u, height: height.u)
     }
-    
-    init(cd: WordsCD) {
-        self.log_id = cd.logId
-        self.location = Location(left: cd.left.u, top: cd.top.u, width: cd.width.u, height: cd.height.u)
-        self.words = cd.word
-    }
-    
-    func split() -> [Words] {
-        var result = [Words]()
-        for v in words.split() {
-            let w = Words(id: log_id, words: v, location: location)
-            result.append(w)
-        }
-        return result
-    }
-    
 }
 
 class WordsContext {
-    var cd: CD
-    init(cd: CD) {
+    var cd: db
+    init(cd: db) {
         self.cd = cd
     }
     
-    func insert(words: [Words]) {
-        words.forEach { w in
-            let ex = fetch(word: w.words)
-            if !ex.isEmpty {
-                return
-            }
-            let r: WordsCD = cd.create(entity: EntityName.words) as! WordsCD
-            r.logId = w.log_id
-            r.word = w.words
-            r.id = "\(w.words.hashValue)"
-            r.left = w.location.left.int32
-            r.top = w.location.top.int32
-            r.width = w.location.width.int32
-            r.height = w.location.height.int32
+    func insert(word: String, logId: String, location: Location) {
+        guard !word.isEmpty else {
+            return
         }
+        let predicate = NSPredicate(format: "word==%@", word)
+        let count = cd.count(entity: word, predicate: predicate)
+        guard count == 0 else {
+            return
+        }
+        let r: Words = cd.create(entity: EntityName.words) as! Words
+        r.logId = logId
+        r.word = word
+        r.id = "\(word.hashValue)"
+        r.left = location.left.int32
+        r.top = location.top.int32
+        r.width = location.width.int32
+        r.height = location.height.int32
     }
     
     func fetch(word: String) -> [Words]{
         let predicate = word.isEmpty ? nil : NSPredicate(format: "word==%@", word)
-        let r: [WordsCD] = cd.fetch(entity: EntityName.words, predicate: predicate) as! [WordsCD]
-        return r.map({
-            Words(cd: $0)
-        })
+        let r: [Words] = cd.fetch(entity: EntityName.words, predicate: predicate) as! [Words]
+        return r
     }
     
-    func delete(words: [WordsCD]) {
+    func delete(words: [Words]) {
         words.forEach {
             cd.context.delete($0)
         }
