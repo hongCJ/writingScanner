@@ -16,9 +16,8 @@ class ViewController: UIViewController {
     @IBOutlet var imageView: UIImageView!
     @IBOutlet var workTable: UITableView!
     fileprivate var searchController: UISearchController!
-    fileprivate var searchResult: SearchViewController!
-    fileprivate var wordArray: [Words] = []
-    
+    fileprivate var searchArray: [Words] = []
+    fileprivate var historyArray: [Words] = []
     fileprivate var scanImage: UIImage?
     
     var cd: CD!
@@ -27,8 +26,8 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         workTable.register(UITableViewCell.self, forCellReuseIdentifier: "work-cell")
-        searchResult = SearchViewController()
-        searchController = UISearchController(searchResultsController: searchResult)
+        searchController = UISearchController(searchResultsController: nil)
+        searchController.dimsBackgroundDuringPresentation = false
         searchController.searchResultsUpdater = self
         workTable.tableHeaderView = searchController.searchBar
         imageContainer.isHidden = true
@@ -104,39 +103,62 @@ class ViewController: UIViewController {
             let l = Location(data: location ?? [:])
             return Words(id: logId, words: word ?? "", location: l)
             }.filter { !$0.words.isEmpty}
-        drawLines(words: words)
+//        drawLines(words: words)
         wordConetxt.insert(words: words.flatMap({
             $0.split()
         }))
         DispatchQueue.main.async {
             self.cd.save()
+            self.saveImage(image: self.scanImage, logId: logId)
         }
     }
     
-    private func drawLines(words: [Words]) {
-        guard let img = scanImage else {
+    private func saveImage(image: UIImage?, logId: String) {
+        guard let data = image?.pngData() else {
             return
+        }
+        guard var document = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            fatalError("error get document url")
+        }
+        document.appendPathComponent("words/\(logId).png")
+        try? data.write(to: document)
+    }
+    
+    private func getImage(logId: String) -> UIImage? {
+        guard var document = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            fatalError("error get document url")
+        }
+        document.appendPathComponent("words/\(logId).png")
+        let img = UIImage(contentsOfFile: document.absoluteString)
+        return img
+    }
+    
+    private func drawLines(image: UIImage?, words: [Words]) -> UIImage? {
+        guard let img = image else {
+            return nil
         }
         defer {
             UIGraphicsEndImageContext()
         }
-        UIGraphicsBeginImageContext(img.size)
+        
+        let rec = words.reduce(CGRect.zero) { (r, w) -> CGRect in
+            return r.equalTo(.zero) ? w.location.rect() : r.union(w.location.rect())
+        }.insetBy(dx: -10, dy: -10)
+        UIGraphicsBeginImageContext(rec.size)
         guard let ctx = UIGraphicsGetCurrentContext() else {
-            return
+            return img
         }
         ctx.setLineWidth(1.0)
         ctx.setStrokeColor(UIColor.red.cgColor)
         img.draw(in: CGRect(origin: .zero, size: img.size))
         words.forEach { word in
-            ctx.addRect(word.location.rect())
+            ctx.addRect(word.location.rect())//.offsetBy(dx: -rec.origin.x, dy: -rec.origin.y))
         }
         ctx.strokePath()
+        ctx.translateBy(x: -rec.origin.x, y: -rec.origin.y)
         
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
-        DispatchQueue.main.async {
-            self.imageView.image = newImage
-            self.imageContainer.isHidden = false
-        }
+        return newImage
     }
     
     fileprivate func showError(msg: String) {
@@ -151,25 +173,33 @@ class ViewController: UIViewController {
 
 extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        searchController.searchBar.resignFirstResponder()
         
+        let arr = searchArray.isEmpty ? historyArray : searchArray
+        let item = arr[indexPath.row]
+        guard let image = getImage(logId: item.log_id) else {
+            return
+        }
+        let newImage = drawLines(image: image, words: [item])
+        ImagePreview(image: newImage).show()
     }
 }
 
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return wordArray.count;
+        return searchArray.isEmpty ? historyArray.count : searchArray.count;
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "work-cell", for: indexPath)
-        cell.textLabel?.text = wordArray[indexPath.row].words;
+        cell.textLabel?.text = searchArray.isEmpty ? historyArray[indexPath.row].words : searchArray[indexPath.row].words;
         return cell
     }
 }
 
 extension ViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
-        wordArray = wordConetxt.fetch(word: searchController.searchBar.text ?? "")
-        searchResult.reloadData(data: wordArray)
+        searchArray = wordConetxt.fetch(word: searchController.searchBar.text ?? "")
+        workTable.reloadData()
     }
 }
 

@@ -94,10 +94,14 @@ class WordsContext {
     
     func insert(words: [Words]) {
         words.forEach { w in
+            let ex = fetch(word: w.words)
+            if !ex.isEmpty {
+                return
+            }
             let r: WordsCD = cd.create(entity: EntityName.words) as! WordsCD
             r.logId = w.log_id
             r.word = w.words
-            r.id = "\(w.log_id)\(w.words.hashValue)"
+            r.id = "\(w.words.hashValue)"
             r.left = w.location.left.int32
             r.top = w.location.top.int32
             r.width = w.location.width.int32
@@ -111,5 +115,11 @@ class WordsContext {
         return r.map({
             Words(cd: $0)
         })
+    }
+    
+    func delete(words: [WordsCD]) {
+        words.forEach {
+            cd.context.delete($0)
+        }
     }
 }
