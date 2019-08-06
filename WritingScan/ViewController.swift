@@ -12,8 +12,6 @@ import AipOcrSdk
 class ViewController: UIViewController {
     @IBOutlet var scan: UIBarButtonItem!
     
-    @IBOutlet var imageContainer: UIView!
-    @IBOutlet var imageView: UIImageView!
     @IBOutlet var workTable: UITableView!
     fileprivate var searchController: UISearchController!
     fileprivate var searchArray: [Words] = []
@@ -30,7 +28,7 @@ class ViewController: UIViewController {
         searchController.dimsBackgroundDuringPresentation = false
         searchController.searchResultsUpdater = self
         workTable.tableHeaderView = searchController.searchBar
-        imageContainer.isHidden = true
+        
         
         cd = db(db: "words", completionClosure: {
             
@@ -44,7 +42,7 @@ class ViewController: UIViewController {
     }
     
     @IBAction func tapGesture(_ sender: Any) {
-        imageContainer.isHidden = true
+        
     }
     @IBAction func scan(_ sender: Any) {
         searchController.searchBar.resignFirstResponder()
@@ -116,24 +114,33 @@ class ViewController: UIViewController {
             self.saveImage(image: self.scanImage, logId: logId)
         }
     }
+    private func cacheImageUrl(name: String) -> URL {
+        guard var document = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            fatalError("error get document url")
+        }
+        document.appendPathComponent("words")
+        if !FileManager.default.fileExists(atPath: document.absoluteString) {
+            try? FileManager.default.createDirectory(at: document, withIntermediateDirectories: false, attributes: nil)
+        }
+        document.appendPathComponent(name)
+        return document
+    }
     
     private func saveImage(image: UIImage?, logId: String) {
         guard let data = image?.pngData() else {
             return
         }
-        guard var document = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            fatalError("error get document url")
-        }
-        document.appendPathComponent("words/\(logId).png")
-        try? data.write(to: document)
+        let url = cacheImageUrl(name: "\(logId).png")
+        try? data.write(to: url)
     }
     
     private func getImage(logId: String) -> UIImage? {
-        guard var document = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            fatalError("error get document url")
+        let url = cacheImageUrl(name: "\(logId).png")
+        guard let data = try? Data(contentsOf: url) else {
+            return nil
         }
-        document.appendPathComponent("words/\(logId).png")
-        let img = UIImage(contentsOfFile: document.absoluteString)
+        let img = UIImage(data: data)
+//        let img = UIImage(contentsOfFile: url.absoluteString)
         return img
     }
     
@@ -145,10 +152,10 @@ class ViewController: UIViewController {
             UIGraphicsEndImageContext()
         }
         
-        let rec = words.reduce(CGRect.zero) { (r, w) -> CGRect in
-            return r.equalTo(.zero) ? w.location.rect() : r.union(w.location.rect())
-        }.insetBy(dx: -10, dy: -10)
-        UIGraphicsBeginImageContext(rec.size)
+//        let rec = words.reduce(CGRect.zero) { (r, w) -> CGRect in
+//            return r.equalTo(.zero) ? w.location.rect() : r.union(w.location.rect())
+//        }.insetBy(dx: -10, dy: -10)
+        UIGraphicsBeginImageContext(img.size)
         guard let ctx = UIGraphicsGetCurrentContext() else {
             return img
         }
@@ -159,7 +166,7 @@ class ViewController: UIViewController {
             ctx.addRect(word.location.rect())//.offsetBy(dx: -rec.origin.x, dy: -rec.origin.y))
         }
         ctx.strokePath()
-        ctx.translateBy(x: -rec.origin.x, y: -rec.origin.y)
+//        ctx.translateBy(x: -rec.origin.x, y: -rec.origin.y)
         
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         return newImage
@@ -217,6 +224,5 @@ extension ViewController: UINavigationControllerDelegate, UIImagePickerControlle
         }
         self.scanImage = image
         self.scanImage(image: image)
-        
     }
 }

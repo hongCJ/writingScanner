@@ -9,7 +9,7 @@
 import UIKit
 import CoreData
 
-@objc(WordsCD)
+@objc(Words)
 class Words: NSManagedObject {
     @NSManaged var logId: String
     @NSManaged var id: String

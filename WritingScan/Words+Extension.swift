@@ -74,7 +74,7 @@ class WordsContext {
             return
         }
         let predicate = NSPredicate(format: "word==%@", word)
-        let count = cd.count(entity: word, predicate: predicate)
+        let count = cd.count(entity: EntityName.words, predicate: predicate)
         guard count == 0 else {
             return
         }
